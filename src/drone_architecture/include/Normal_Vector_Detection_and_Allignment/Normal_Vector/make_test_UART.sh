@@ -1,0 +1,1 @@
+g++ -lpthread test_UART_class.cpp ./private/UART.cpp -o test_UART

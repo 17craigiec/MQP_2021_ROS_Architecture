@@ -1,0 +1,2 @@
+int16 m_pinNumber
+int64 m_setpoint

@@ -1,0 +1,1 @@
+g++ -lpigpio ../main.cpp ../../RPi_BNO055/RPi_BNO055.cpp ../../BoxInfo/BoxInfo.cpp ../../../../../git/MQP2021_Autonomous_Pollination/Algorithms/Flower_Detection/Normal_Vector/public/CalculateVector.cpp
