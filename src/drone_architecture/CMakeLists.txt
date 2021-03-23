@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  geometry_msgs
+  mavros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -57,6 +59,7 @@ add_message_files(
   pixhawkControl.msg
   pixhawkControlStatus.msg
   endEffectorControl.msg
+  pixhawkInterface.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -77,6 +80,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 ################################################
@@ -211,26 +215,30 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(Uart_Node src/Uart_Node.cpp)
-target_link_libraries(Uart_Node ${catkin_LIBRARIES})
-add_dependencies(Uart_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(Uart_Node src/Uart_Node.cpp)
+# target_link_libraries(Uart_Node ${catkin_LIBRARIES})
+# add_dependencies(Uart_Node ${catkin_EXPORTED_TARGETS})
 
-add_executable(Main_Node src/Main_Node.cpp)
-target_link_libraries(Main_Node ${catkin_LIBRARIES})
-add_dependencies(Main_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(Main_Node src/Main_Node.cpp)
+# target_link_libraries(Main_Node ${catkin_LIBRARIES})
+# add_dependencies(Main_Node ${catkin_EXPORTED_TARGETS})
 
-add_executable(NormalVectorCalculator_Node src/NormalVectorCalculator_Node.cpp)
-target_link_libraries(NormalVectorCalculator_Node ${catkin_LIBRARIES})
-add_dependencies(NormalVectorCalculator_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(NormalVectorCalculator_Node src/NormalVectorCalculator_Node.cpp)
+# target_link_libraries(NormalVectorCalculator_Node ${catkin_LIBRARIES})
+# add_dependencies(NormalVectorCalculator_Node ${catkin_EXPORTED_TARGETS})
 
-add_executable(PixhawkControl_Node src/PixhawkControl_Node.cpp)
-target_link_libraries(PixhawkControl_Node ${catkin_LIBRARIES})
-add_dependencies(PixhawkControl_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(PixhawkControl_Node src/PixhawkControl_Node.cpp)
+# target_link_libraries(PixhawkControl_Node ${catkin_LIBRARIES})
+# add_dependencies(PixhawkControl_Node ${catkin_EXPORTED_TARGETS})
 
-add_executable(EndEffector_Node src/EndEffector_Node.cpp)
-target_link_libraries(EndEffector_Node ${catkin_LIBRARIES})
-add_dependencies(EndEffector_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(EndEffector_Node src/EndEffector_Node.cpp)
+# target_link_libraries(EndEffector_Node ${catkin_LIBRARIES})
+# add_dependencies(EndEffector_Node ${catkin_EXPORTED_TARGETS})
 
-add_executable(ControlLoop_Node src/ControlLoop_Node.cpp)
-target_link_libraries(ControlLoop_Node ${catkin_LIBRARIES})
-add_dependencies(ControlLoop_Node ${catkin_EXPORTED_TARGETS})
+# add_executable(ControlLoop_Node src/ControlLoop_Node.cpp)
+# target_link_libraries(ControlLoop_Node ${catkin_LIBRARIES})
+# add_dependencies(ControlLoop_Node ${catkin_EXPORTED_TARGETS})
+
+add_executable(PixhawkInterface_Node src/PixhawkInterface_Node.cpp)
+target_link_libraries(PixhawkInterface_Node ${catkin_LIBRARIES})
+add_dependencies(PixhawkInterface_Node ${catkin_EXPORTED_TARGETS})
