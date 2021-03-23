@@ -5,4 +5,5 @@
     <node pkg = "drone_architecture" type="Main_Node" name="Main_Controller" output="screen"> </node>
     <node pkg = "drone_architecture" type="PixhawkControl_Node" name="Pixhawk_Controller" output="screen"> </node>
     <node pkg = "drone_architecture" type="EndEffector_Node" name="EndEffector_Controller" output="screen"> </node>
+    <node pkg = "drone_architecture" type="ControlLoop_Node" name="Control_Loop" output="screen"> </node>
 </launch>

@@ -31,24 +31,6 @@ void UpdateStateCallback(const drone_architecture::pixhawkControl& msg)
     std::cout<<"Received Message in controller"<<endl;
 }
 
-
-//velocity c
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void State_Machine()
 {
     switch (state)
