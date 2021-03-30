@@ -30,7 +30,6 @@ int main(int argc, char **argv)
     ros::Subscriber command_sub = nh.subscribe<drone_architecture::pixhawkInterface>
             ("/command", 10, command_cb);
 
-
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
     ros::Publisher local_vel_pub = nh.advertise<geometry_msgs::Twist>

@@ -10,25 +10,20 @@
 
 using namespace std;
 
-
-
 void endEffectorCallback(const drone_architecture::endEffectorControl& msg)
 {
-    if(msg.m_setpoint > 1000)
+    int setPoint = msg.m_setpoint;
+    if(setPoint > 1000)
     {
-        msg.m_setpoint = 1000;
-        cout << "Error, Servo setpoint is out of bounds: " << msg.m_setpoint << endl;
-    }else if(msg.m_setpoint < 0)
+        setPoint = 1000;
+        cout << "Error, Servo setpoint is out of bounds: " << setPoint << endl;
+    }else if(setPoint < 0)
     {
-        msg.m_setpoint = 0;
-        cout << "Error, Servo setpoint is out of bounds: " << msg.m_setpoint << endl;
+        setPoint = 0;
+        cout << "Error, Servo setpoint is out of bounds: " << setPoint << endl;
     }
-    
-    gpioServo(msg.m_pinNumber, msg.m_setpoint+1000);
+    gpioServo(msg.m_pinNumber, setPoint+1000);
 }
-
-
-
 
 
 int main(int argc, char **argv)

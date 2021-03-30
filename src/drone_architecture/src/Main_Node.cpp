@@ -3,10 +3,12 @@
 #include "drone_architecture/flower.h"
 #include "drone_architecture/normalVectorTrigger.h"
 #include "drone_architecture/normalVectorStatus.h"
-#include "drone_architecture/pixhawkControl.h"
+#include "drone_architecture/PIDVelocity.h"
+#include "drone_architecture/pixhawkInterface.h"
 #include "drone_architecture/pixhawkControlStatus.h"
 #include "drone_architecture/endEffectorControl.h"
 #include "drone_architecture/flowerData.h"
+
 
 #include <iostream>
 
@@ -14,12 +16,12 @@ using namespace std;
 
 enum Option
 {
-  searchForFlower, lockOnFlower, centerFlower, allignWithFlower, confirmAllignedWithFlower, allignServo,
+  sendPositionalMessages, offBoard, arming, searchForFlower, lockOnFlower, centerFlower, allignWithFlower, confirmAllignedWithFlower, allignServo,
   lowerToFlower, pollinateFlower, returnToSearchHeight, resetServoPosition, 
 };
 
-int  choice= searchForFlower;
-int nextChoice = searchForFlower;
+int  choice= sendPositionalMessages;
+int nextChoice = sendPositionalMessages;
 drone_architecture::flowerData flowerDataMessage;
 drone_architecture::flower targetFlower;
 int desiredID = 0;
@@ -39,7 +41,6 @@ void flowerCallback(const drone_architecture::flowerData& msg)
         }
         catch(const std::exception& e) //Flower disapeared for some reason
         {
-            // TODO: May Need to Reset Normal Vector Trigger 
             choice = lockOnFlower;
             flowerDataMessage = msg;
         }
@@ -57,10 +58,49 @@ void NormalVectorCallback(const drone_architecture::normalVectorStatus& msg)
 
 }
 
-void State_Machine(ros::Publisher CalculateNormalVector_pub, ros::Publisher PixhawkMessage_pub, ros::Publisher EndEffector_pub )
+void State_Machine(ros::Publisher CalculateNormalVector_pub, ros::Publisher VelocityPID_pub, ros::Publisher EndEffector_pub, ros::Publisher pixHawk_pub)
 {
     switch (choice)
     {
+        case sendPositionalMessages: 
+        {
+            cout << "sendPositionalMessages Case" << endl;
+            drone_architecture::pixhawkInterface InterfaceMessage;
+            geometry_msgs::Pose position_message;
+            position_message.position.x = 0;
+            position_message.position.y = 0;
+            position_message.position.z = 2;
+
+            InterfaceMessage.pose = position_message;
+            InterfaceMessage.flight_command = "POSTITION";
+            for(int i; i < 20; i++)
+            {
+                pixHawk_pub.publish(InterfaceMessage);
+            }
+            choice = offBoard;
+        }
+        break;
+
+        case offBoard:
+        {
+            cout << "offBoard Case" << endl;
+            drone_architecture::pixhawkInterface InterfaceMessage;
+            InterfaceMessage.flight_command = "OFFBOARD";
+            pixHawk_pub.publish(InterfaceMessage);   
+            choice = arming;      
+        }
+        break;
+
+        case arming:
+        {
+            cout << "arming Case" << endl;
+            drone_architecture::pixhawkInterface InterfaceMessage;
+            InterfaceMessage.flight_command = "ARM";
+            pixHawk_pub.publish(InterfaceMessage);  
+            choice = searchForFlower;      
+        }
+        break;
+
         case searchForFlower:
         {
             cout << "searchForFlower Case" << endl;
@@ -79,33 +119,14 @@ void State_Machine(ros::Publisher CalculateNormalVector_pub, ros::Publisher Pixh
 
         case centerFlower:
         {
-            drone_architecture::pixhawkControl pixhawk_msg;
-            pixhawk_msg.desiredState = "centerOnFlower";
-            pixhawk_msg.m_flower = targetFlower;
-            PixhawkMessage_pub.publish(pixhawk_msg);
+            drone_architecture::PIDVelocity PID_msg;
+            PID_msg.m_flower = targetFlower;
+            VelocityPID_pub.publish(PID_msg);
             choice = centerFlower;
             nextChoice = allignWithFlower;
         }
         break;
-
-        case allignWithFlower:
-        {
-            // drone_architecture::normalVectorTrigger normalVector_msg;
-            // normalVector_msg.start = true;
-            // normalVector_msg.flower = flowerDataMessage.flowerArray[0];
-            // CalculateNormalVector_pub.publish(normalVector_msg);
-            // cout << "allignWithFlower Case" << endl;
-            // choice = confirmAllignedWithFlower;
-        }
-        break;
-
-        case confirmAllignedWithFlower:
-        {
-            cout << "Waiting for Confirmation" << endl;
-            choice = confirmAllignedWithFlower;
-        }
-        break;
-
+        
         case allignServo:
         {
             cout << "allignServo Case" << endl;
@@ -156,8 +177,9 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     ros::Publisher CalculateNormalVector_pub = n.advertise<drone_architecture::normalVectorTrigger>("calculateNormalVector", 1000);
-    ros::Publisher PixhawkMessage_pub = n.advertise<drone_architecture::pixhawkControl>("pixhawkControllerState", 1000);
+    ros::Publisher VelocityPID_pub = n.advertise<drone_architecture::PIDVelocity>("PIDVelocityController", 1000);
     ros::Publisher EndEffector_pub = n.advertise<drone_architecture::endEffectorControl>("EndEffectorControl", 1000);
+    ros::Publisher pixHawk_pub = n.advertise<drone_architecture::pixhawkInterface>("/command", 1000);
 
     
     ros::Subscriber Flower_sub = n.subscribe("FlowerData", 1000, flowerCallback);
@@ -170,7 +192,7 @@ int main(int argc, char **argv)
     ros::spinOnce();
 
     while (ros::ok()) {
-        State_Machine(CalculateNormalVector_pub, PixhawkMessage_pub, EndEffector_pub);
+        State_Machine(CalculateNormalVector_pub, VelocityPID_pub, EndEffector_pub, pixHawk_pub);
         ros::spinOnce();
         loop_rate.sleep();
     }

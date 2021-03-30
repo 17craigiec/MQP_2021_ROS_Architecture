@@ -70,12 +70,6 @@ int main(int argc, char **argv)
               else if(index ==1){
                 flower.m_X = stoi (flowerToken,&sz);
               }
-              else if(index ==2){
-                flower.m_Y = stoi (flowerToken,&sz);
-              }
-              else if(index ==3){
-                flower.m_Width = stoi (flowerToken,&sz);
-              }
               else{
                 goodMessage = false;
               }
@@ -90,7 +84,7 @@ int main(int argc, char **argv)
         }
         if(goodMessage){
           string::size_type sz;   // alias of size_t
-          flower.m_Height = stoi (flowerToken,&sz);
+          flower.m_Y = stoi (flowerToken,&sz);
           msg.flowerArray.push_back(flower);
         }
         line.erase(0, pos + delimiter.length());

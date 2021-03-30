@@ -1,2 +1,0 @@
-string desiredState
-flower m_flower
