@@ -55,9 +55,6 @@ add_message_files(
   FILES
   flowerData.msg
   flower.msg
-  normalVectorTrigger.msg
-  normalVectorStatus.msg
-  PIDVelocity.msg
   pixhawkControlStatus.msg
   endEffectorControl.msg
   pixhawkInterface.msg
@@ -223,14 +220,6 @@ add_dependencies(Uart_Node ${catkin_EXPORTED_TARGETS})
 add_executable(Main_Node src/Main_Node.cpp)
 target_link_libraries(Main_Node ${catkin_LIBRARIES})
 add_dependencies(Main_Node ${catkin_EXPORTED_TARGETS})
-
-add_executable(NormalVectorCalculator_Node src/NormalVectorCalculator_Node.cpp)
-target_link_libraries(NormalVectorCalculator_Node ${catkin_LIBRARIES})
-add_dependencies(NormalVectorCalculator_Node ${catkin_EXPORTED_TARGETS})
-
-add_executable(ControlLoop_Node src/ControlLoop_Node.cpp)
-target_link_libraries(ControlLoop_Node ${catkin_LIBRARIES})
-add_dependencies(ControlLoop_Node ${catkin_EXPORTED_TARGETS})
 
 add_executable(PixhawkInterface_Node src/PixhawkInterface_Node.cpp)
 target_link_libraries(PixhawkInterface_Node ${catkin_LIBRARIES})

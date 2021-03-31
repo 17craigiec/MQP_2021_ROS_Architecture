@@ -1,14 +1,12 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "drone_architecture/flower.h"
-#include "drone_architecture/normalVectorTrigger.h"
-#include "drone_architecture/normalVectorStatus.h"
-#include "drone_architecture/PIDVelocity.h"
 #include "drone_architecture/pixhawkInterface.h"
 #include "drone_architecture/pixhawkControlStatus.h"
 #include "drone_architecture/endEffectorControl.h"
 #include "drone_architecture/flowerData.h"
-
+#include "PID_Driver.cpp"
+#include <geometry_msgs/Twist.h>
 
 #include <iostream>
 
@@ -45,7 +43,6 @@ void flowerCallback(const drone_architecture::flowerData& msg)
             flowerDataMessage = msg;
         }
     }
-    std::cout<<"Received Message"<<endl;
 }
 
 void pixhawkCallback(const drone_architecture::pixhawkControlStatus& msg)
@@ -53,12 +50,7 @@ void pixhawkCallback(const drone_architecture::pixhawkControlStatus& msg)
     choice = nextChoice;
 }
 
-void NormalVectorCallback(const drone_architecture::normalVectorStatus& msg)
-{
-
-}
-
-void State_Machine(ros::Publisher CalculateNormalVector_pub, ros::Publisher VelocityPID_pub, ros::Publisher EndEffector_pub, ros::Publisher pixHawk_pub)
+void State_Machine(ros::Publisher EndEffector_pub, ros::Publisher pixHawk_pub)
 {
     switch (choice)
     {
@@ -119,11 +111,36 @@ void State_Machine(ros::Publisher CalculateNormalVector_pub, ros::Publisher Velo
 
         case centerFlower:
         {
-            drone_architecture::PIDVelocity PID_msg;
-            PID_msg.m_flower = targetFlower;
-            VelocityPID_pub.publish(PID_msg);
-            choice = centerFlower;
-            nextChoice = allignWithFlower;
+            int setpointX = 160;
+            int setpointY = 120;
+            PID_Driver pid_velocity_x(.01, 0, 0);
+            PID_Driver pid_velocity_y(.01, 0, 0);
+            float x_velocity = pid_velocity_x.setVelocity(setpointX, targetFlower.m_X);
+            float y_velocity = pid_velocity_y.setVelocity(setpointY, targetFlower.m_Y);
+
+            drone_architecture::pixhawkInterface InterfaceMessage;
+            geometry_msgs::Twist velocity_message;
+            velocity_message.linear.x = x_velocity;
+            velocity_message.linear.y = y_velocity;
+            velocity_message.linear.z = 0;
+
+            std::cout<<"Velocities"<<endl;
+            std::cout<<x_velocity<<endl;
+            std::cout<<y_velocity<<endl;
+
+            InterfaceMessage.twist = velocity_message;
+            InterfaceMessage.flight_command = "VELOCITY";
+
+            pixHawk_pub.publish(InterfaceMessage);
+
+            if(x_velocity==0 && y_velocity==0)
+            {
+                choice = allignServo;
+            }
+            else
+            {
+                choice = centerFlower;
+            }
         }
         break;
         
@@ -176,15 +193,12 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Main_Node");
     ros::NodeHandle n;
 
-    ros::Publisher CalculateNormalVector_pub = n.advertise<drone_architecture::normalVectorTrigger>("calculateNormalVector", 1000);
-    ros::Publisher VelocityPID_pub = n.advertise<drone_architecture::PIDVelocity>("PIDVelocityController", 1000);
     ros::Publisher EndEffector_pub = n.advertise<drone_architecture::endEffectorControl>("EndEffectorControl", 1000);
     ros::Publisher pixHawk_pub = n.advertise<drone_architecture::pixhawkInterface>("/command", 1000);
 
     
     ros::Subscriber Flower_sub = n.subscribe("FlowerData", 1000, flowerCallback);
     ros::Subscriber Pixhawk_sub = n.subscribe("pixhawkControlStatus", 1000, pixhawkCallback);
-    ros::Subscriber NormalVector_sub = n.subscribe("normalVectorStatus", 1000, NormalVectorCallback);
 
 
 
@@ -192,7 +206,7 @@ int main(int argc, char **argv)
     ros::spinOnce();
 
     while (ros::ok()) {
-        State_Machine(CalculateNormalVector_pub, VelocityPID_pub, EndEffector_pub, pixHawk_pub);
+        State_Machine(EndEffector_pub, pixHawk_pub);
         ros::spinOnce();
         loop_rate.sleep();
     }

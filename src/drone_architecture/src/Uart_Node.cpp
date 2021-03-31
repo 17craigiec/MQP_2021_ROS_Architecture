@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         }
         if(goodMessage){
           string::size_type sz;   // alias of size_t
-          flower.m_Y = stoi (flowerToken,&sz);
+          flower.m_Y = stoi (token,&sz);
           msg.flowerArray.push_back(flower);
         }
         line.erase(0, pos + delimiter.length());
