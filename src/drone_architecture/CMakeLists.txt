@@ -56,14 +56,15 @@ add_message_files(
   flower.msg
   endEffectorControl.msg
   pixhawkInterface.msg
+  searchStatus.msg
+  initializeSearch.msg
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  nextWaypoint.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -222,3 +223,7 @@ add_dependencies(Main_Node ${catkin_EXPORTED_TARGETS})
 add_executable(PixhawkInterface_Node src/PixhawkInterface_Node.cpp)
 target_link_libraries(PixhawkInterface_Node ${catkin_LIBRARIES})
 add_dependencies(PixhawkInterface_Node ${catkin_EXPORTED_TARGETS})
+
+add_executable(SearchRegion_Node src/SearchRegion_Node.cpp)
+target_link_libraries(SearchRegion_Node ${catkin_LIBRARIES})
+add_dependencies(SearchRegion_Node ${catkin_EXPORTED_TARGETS})
