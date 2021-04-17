@@ -10,16 +10,18 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 #include <iostream>
-#include <math.h>  
 #include <unistd.h>
+#include <math.h>  
+#include <sys/time.h>
 #define PI 3.14159265
 
 using namespace std;
 
 enum Option
 {
-  sendPositionalMessages, offBoard, arming, initStateMachine, searchForFlower, lockOnFlower, centerFlower, allignServo,
+  sendPositionalMessages, offBoard, arming, initStateMachine, searchForFlower, cyclical_search, lockOnFlower, centerFlower, allignServo,
   lowerToFlower, pollinateFlower, returnToSearchHeight, resetServoPosition, 
 };
 
@@ -29,6 +31,10 @@ drone_architecture::flower targetFlower;
 int desiredID = 0;
 PID_Driver pid_velocity_x(.01, 0, 0);
 PID_Driver pid_velocity_y(.01, 0, 0);
+
+// time_t start_search_time;
+struct timeval tp;
+double start_search_time;
 
 void flowerCallback(const drone_architecture::flowerData& msg)
 {
@@ -53,6 +59,8 @@ void flowerCallback(const drone_architecture::flowerData& msg)
 }
 
 geometry_msgs::PoseStamped currentPosition;
+geometry_msgs::PoseStamped droneOrigin;
+
 void pixhawkCallback(const geometry_msgs::PoseStamped& msg)
 {
     currentPosition = msg;
@@ -106,6 +114,7 @@ void State_Machine(ros::Publisher EndEffector_pub, ros::Publisher pixHawk_pub)
             InterfaceMessage.flight_command = "OFFBOARD";
             pixHawk_pub.publish(InterfaceMessage);   
             choice = arming;  
+            droneOrigin = currentPosition;
             sleep(5);    
         }
         break;
@@ -124,7 +133,50 @@ void State_Machine(ros::Publisher EndEffector_pub, ros::Publisher pixHawk_pub)
         case searchForFlower:
         {
             cout << "searchForFlower Case" << endl;
-            choice = searchForFlower;
+            // ====================================
+            // Start timing the search for flower state
+            // start_search_time = time(nullptr);
+            gettimeofday(&tp, NULL);
+            start_search_time = (double)tp.tv_sec + (double)tp.tv_usec / 1000000;
+
+            // Choose some search algorithim state
+            choice = cyclical_search;
+
+            // ====================================
+            // choice = searchForFlower;
+        }
+        break;
+
+        case cyclical_search:
+        {
+            gettimeofday(&tp, NULL);
+            double elapsed_time = (double)tp.tv_sec + (double)tp.tv_usec / 1000000 - start_search_time;
+            // cout << "Elapsed_Time: " << elapsed_time << endl;
+
+            // Cyclical Functions
+            double v_max = 0.5;    // max velocity (meters/second)
+            double r_max = 8;      // max search radius (meters)
+            double a = 1;          // distance between overlapping cyclical paths (meters)
+
+            double current_theta = sqrt(v_max*(elapsed_time/a));
+            double curent_radius = a*current_theta/(2*PI);
+
+            double pos_x = curent_radius*cos(current_theta);
+            double pos_y = curent_radius*sin(current_theta);
+
+            drone_architecture::pixhawkInterface InterfaceMessage;
+            geometry_msgs::Pose position_message;
+
+            position_message.position.x = droneOrigin.pose.position.x + pos_x;
+            position_message.position.y = droneOrigin.pose.position.y + pos_y;
+            position_message.position.z = droneOrigin.pose.position.z+1;
+            position_message.orientation = droneOrigin.pose.orientation;
+            InterfaceMessage.pose = position_message;
+            InterfaceMessage.flight_command = "POSITION";
+
+            pixHawk_pub.publish(InterfaceMessage);
+            cout << pos_x << ", " << pos_y << endl;
+
         }
         break;
 
