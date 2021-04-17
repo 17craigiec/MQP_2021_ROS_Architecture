@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
     ros::Publisher local_vel_pub = nh.advertise<geometry_msgs::Twist>
-            ("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
+            ("mavros/setpoint_velocity/cmd_vel_unstamped", 1);
 
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
             ("mavros/cmd/arming");
@@ -82,7 +82,6 @@ int main(int argc, char **argv)
         }
 
         if(flight_mode.compare("OFFBOARD") == 0){
-
             if(set_mode_client.call(offb_set_mode) && offb_set_mode.response.mode_sent){
                 ROS_INFO("Offboard enabled");
             }

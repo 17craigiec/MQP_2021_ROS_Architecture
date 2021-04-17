@@ -2,8 +2,12 @@
 <launch>
 	<node pkg = "drone_architecture" type="NormalVectorCalculator_Node" name="NormalVectorCalculator_subscriber" output="screen"> </node>
     <node pkg = "drone_architecture" type="Uart_Node" name="Uart_publisher" output="screen"> </node>
-    <node pkg = "drone_architecture" type="EndEffector_Node" name="EndEffector_Controller" output="screen"> </node>
+    <node pkg = "drone_architecture" type="EndEffector_Node.py" name="EndEffector_Controller" output="screen"> </node>
     <node pkg = "drone_architecture" type="Main_Node" name="Main_Controller" output="screen"> </node>
     <node pkg = "drone_architecture" type="PixhawkInterface_Node" name="Pixhawk_Interface" output="screen"> </node>
     <node pkg = "drone_architecture" type="ControlLoop_Node" name="Control_Loop" output="screen"> </node>
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AG0KA2TI-if00-port0:115200"/>
+        <arg name="gcs_url" value="udp://:14550@127.0.0.1:14557"/>
+    </include>
 </launch>

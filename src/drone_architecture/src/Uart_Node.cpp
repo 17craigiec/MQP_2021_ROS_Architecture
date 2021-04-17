@@ -35,9 +35,9 @@ int main(int argc, char **argv)
    * The advertise() function is how you tell ROS that you want to
    * publish on a given topic name. 
    */
-  ros::Publisher FlowerData_pub = n.advertise<drone_architecture::flowerData>("FlowerData", 1000);
+  ros::Publisher FlowerData_pub = n.advertise<drone_architecture::flowerData>("FlowerData", 1);
 
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
 
   ifstream myfile ("/dev/ttyAMA0");
   string line;

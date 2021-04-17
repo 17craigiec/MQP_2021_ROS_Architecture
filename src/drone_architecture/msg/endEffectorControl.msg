@@ -1,2 +1,3 @@
-int16 m_pinNumber
-int64 m_setpoint
+int64 m_XCentroid
+int64 m_YCentroid
+bool m_reset
