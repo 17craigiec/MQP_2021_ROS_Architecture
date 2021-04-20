@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
@@ -32,8 +32,8 @@ int main(int argc, char **argv)
 
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
-    ros::Publisher local_vel_pub = nh.advertise<geometry_msgs::Twist>
-            ("mavros/setpoint_velocity/cmd_vel_unstamped", 1);
+    ros::Publisher local_vel_pub = nh.advertise<geometry_msgs::TwistStamped>
+            ("mavros/setpoint_velocity/cmd_vel", 10);
 
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
             ("mavros/cmd/arming");
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     offb_set_mode.request.custom_mode = "OFFBOARD";
 
     geometry_msgs::PoseStamped target_pose;
-    geometry_msgs::Twist target_twist;
+    geometry_msgs::TwistStamped target_twist;
 
 
     while(ros::ok()){
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
         }
 
         if(flight_mode.compare("VELOCITY") == 0){
-            target_twist = incoming_msg.twist;
+            target_twist.twist = incoming_msg.twist;
             local_vel_pub.publish(target_twist);
         }
 

@@ -1,4 +1,5 @@
 bool go_to_pose # tell the drone to go to the current waypoint
 bool next_pose # tell the drone to go to the next waypoint
+bool publish # tell the drone to stop publishing points
 ---
 bool arrived # the drone says if it has arrived at the target waypoint

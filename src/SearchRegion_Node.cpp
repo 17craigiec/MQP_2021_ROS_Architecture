@@ -6,7 +6,9 @@
 #include "drone_architecture/initializeSearch.h"
 #include "drone_architecture/searchStatus.h"
 #include "drone_architecture/nextWaypoint.h"
+#include <iostream>
 #include <string.h>
+#include <math.h>
 #include <vector>
 
 
@@ -52,10 +54,37 @@ void generate_waypoints(std::vector<std::vector<float>> * waypoints, int size, c
     }
     else if (type.compare("SPIRAL") == 0){
         ROS_INFO("Spiral!");
+        current_status.region_type = "SPIRAL";
+
+        std::cout << "========= BEGIN SPIRAL REGION ==========" << std::endl;
+
+        double v_max = y_axis; // maximum velocity in m/s
+        double f_hz = density; // setpoint frequency in 1/s
+
+        double a = 1; // distance between spirals in meters
+        double c = 1.5855; // a magic constant
+
+        // Create the list of setpoints
+        for(int i=0; i < size; i++){
+            double t = (double)i/f_hz;
+            // std::cout << t << std::endl;
+
+            double theta = c*sqrt((v_max*t*2*M_PI)/a);
+            double x_pos = ((a*theta)/(2*M_PI))*cos(theta);
+            double y_pos = ((a*theta)/(2*M_PI))*sin(theta);
+            double z_pos = height; // flight height 
+
+            points[i][0] = x_pos;
+            points[i][1] = y_pos;
+            points[i][2] = z_pos;
+            std::cout << x_pos << ", " << y_pos << std::endl;
+        }
+
+        std::cout << "========= END SPIRAL REGION ==========" << std::endl;
     }
 
     *waypoints = points;
-}
+} 
 
 bool init_waypoints = false;
 drone_architecture::initializeSearch init_msg;
@@ -64,15 +93,26 @@ void init_cb(const drone_architecture::initializeSearch::ConstPtr& msg){
     init_msg = *msg;
     init_waypoints = true;
     
-    if (type.compare("RECTANGLE") == 0){
+    if (msg->region_type.compare("RECTANGLE") == 0){
         num_points = int((msg->x_axis + msg->density)/msg->density * (msg->y_axis + msg->density)/msg->density);
     }
     // else if (type.compare("ELLIPSE") == 0){
 
     // }
-    // else if (type.compare("SPIRAL") == 0){
+    else if (msg->region_type.compare("SPIRAL") == 0){
+        double r_max = msg->x_axis; // maximum radius of search in meters
+        double v_max = msg->y_axis; // frequency of generatet setpoints in Hz -- must be larger than 2Hz
+        double f_hz = msg->density; // maximum velocity in m/s
 
-    // }
+        
+        double a = 2; // distance between spirals in meters
+        double c = 1.5855; // a magic constant
+
+        double max_theta = r_max*2*M_PI/a; // maximum theta reached in radians
+        double search_time = pow((max_theta/c),2)*(a/(v_max*2*M_PI)); //time elapsed to search a given radian theta
+        num_points = floor(search_time*f_hz); // number of setpoint generated in a given time to reach a certain angle in radians
+        std::cout << "========= SPIRAL REGION INITIALIZED ==========" << std::endl;
+    }
 }
 
 mavros_msgs::State current_state;
@@ -91,6 +131,7 @@ void home_cb(const mavros_msgs::HomePosition::ConstPtr& msg){
 }
 
 bool update_waypoint_flag{false};
+bool publish_target{false};
 float ep_x{0.1};
 float ep_y{0.1};
 float ep_z{0.1};
@@ -119,6 +160,9 @@ bool next_waypoint(drone_architecture::nextWaypoint::Request  &req,
             retval = true;
         }
     }
+
+    publish_target = req.publish;
+    current_status.publishing = req.publish;
 
     return retval;
 }
@@ -156,7 +200,7 @@ int main(int argc, char **argv)
 
     std::vector<std::vector<float>> waypoints(num_points);
 
-    generate_waypoints(&waypoints, num_points, init_msg.region_type, init_msg.x_axis, init_msg.x_axis, init_msg.height, init_msg.density);
+    generate_waypoints(&waypoints, num_points, init_msg.region_type, init_msg.x_axis, init_msg.y_axis, init_msg.height, init_msg.density);
     
     int waypoint_index{0};
     current_waypoint = waypoints[waypoint_index];
@@ -204,7 +248,10 @@ int main(int argc, char **argv)
             update_waypoint_flag = false;
         }
 
-        interface_pub.publish(goto_waypoint);
+        if (publish_target){
+            interface_pub.publish(goto_waypoint);
+        }
+
         status_pub.publish(current_status);
 
         ros::spinOnce();
